@@ -1,0 +1,11 @@
+#!/bin/sh
+
+printf "Zadejte prvni cislo: "
+read -r prvni_cislo
+
+printf "Zadejte druhe cislo: "
+read -r druhe_cislo
+
+soucet=$((prvni_cislo + druhe_cislo))
+
+printf "Soucet je: %d\n" "$soucet"
