@@ -1,0 +1,19 @@
+#!/bin/sh
+
+ask_user() {
+    printf "Prejete si pocitat dalsi priklad? (y/n): "
+    read -r input
+}
+
+scitani() {
+    case $input in
+    y)
+        sh scitani
+        ask_user
+        scitani
+        ;;
+    esac
+}
+
+ask_user
+scitani
