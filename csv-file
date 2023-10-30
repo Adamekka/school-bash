@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+filename="file.csv"
+line_count=0
+
+while IFS= read -r line; do
+    line_count=$((line_count + 1))
+    IFS=';' read -r -a array <<<"$line"
+    printf "%d: %s\n" "$line_count" "${array[0]} ${array[1]} ${array[2]} ${array[3]}"
+done <"$filename"
