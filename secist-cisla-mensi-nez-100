@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+printf "Prejete si pocitat dalsi priklad? (y/n): "
+read -r input
+
+select input in "suda" "licha" "vsechno"; do
+    case $input in
+    suda)
+        count=0
+        for i in {1..100}; do
+            if [ $((i % 2)) -eq 0 ]; then
+                count=$((count + 1))
+            fi
+        done
+        printf "Pocet sudych cisel je: %d\n" "$count"
+        ;;
+    licha)
+        count=0
+        for i in {1..100}; do
+            if [ $((i % 2)) -ne 0 ]; then
+                count=$((count + 1))
+            fi
+        done
+        printf "Pocet lichych cisel je: %d\n" "$count"
+        ;;
+    vsechno)
+        count=0
+        for i in {1..100}; do
+            count=$((count + 1))
+        done
+        printf "Pocet cisel je: %d\n" "$count"
+        ;;
+    esac
+done
