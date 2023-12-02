@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+while IFS= read -r line; do
+    # Skip empty lines
+    if [ -z "$line" ]; then
+        continue
+    fi
+
+    # Check if line has 3 words
+    word_count=$(echo "$line" | wc -w)
+    if [ "$word_count" -ne 3 ]; then
+        echo "Line '$line' has $word_count words, expected 3"
+        continue
+    fi
+
+    IFS=' ' read -r -a array <<<"$line"
+
+    # Check if first word is a number
+    if ! [[ "${array[0]}" =~ ^[0-9]+$ ]]; then
+        echo "First word '${array[0]}' is not a number"
+        continue
+    fi
+
+    # Check if second word is a +, -, * or /
+    if [ "${array[1]}" != "+" ] && [ "${array[1]}" != "-" ] && [ "${array[1]}" != "*" ] && [ "${array[1]}" != "/" ]; then
+        echo "Second word '${array[1]}' is not a +, -, * or /"
+        continue
+    fi
+
+    # Check if third word is a number
+    if ! [[ "${array[2]}" =~ ^[0-9]+$ ]]; then
+        echo "Third word '${array[2]}' is not a number"
+        continue
+    fi
+
+    # Calculate result
+    result=0
+    case "${array[1]}" in
+    "+")
+        result=$((array[0] + array[2]))
+        ;;
+    "-")
+        result=$((array[0] - array[2]))
+        ;;
+    "*")
+        result=$((array[0] * array[2]))
+        ;;
+    "/")
+        result=$((array[0] / array[2]))
+        ;;
+    esac
+
+    echo "${array[0]} ${array[1]} ${array[2]} = $result" >>priklady-reseni.txt
+done <priklady.txt
