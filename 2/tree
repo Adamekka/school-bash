@@ -1,0 +1,11 @@
+#!/bin/sh
+
+mkdir ~/scripts
+
+# Set RWX on ~/scripts
+chmod -R 777 ~/scripts
+
+# Normal files only
+ls -l /etc >~/scripts/normal-files.txt
+# Hidden files only
+find /etc -maxdepth 1 -type f -name '.*' >~/scripts/hidden-files.txt
