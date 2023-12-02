@@ -1,0 +1,17 @@
+#!/bin/sh
+
+date=$(date)
+user=$(whoami)
+systeminfo=$(uname -a)
+path=$PATH
+vars=$(env)
+
+rm systeminfo.txt
+
+{
+    echo "Date: $date"
+    echo "User: $user"
+    echo "System info: $systeminfo"
+    echo "Path: $path"
+    echo "Env vars: $vars"
+} >>systeminfo.txt
