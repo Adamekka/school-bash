@@ -1,11 +1,30 @@
 #!/bin/sh
 
+rm -rf ~/scripts
 mkdir ~/scripts
 
 # Set RWX on ~/scripts
 chmod -R 777 ~/scripts
 
-# Normal files only
-ls -l /etc >~/scripts/normal-files.txt
-# Hidden files only
-find /etc -maxdepth 1 -type f -name '.*' >~/scripts/hidden-files.txt
+all_files=$(ls -l /private/etc)
+sym_links=$(find /private/etc -maxdepth 1 -type l)
+hard_links=$(find /private/etc -maxdepth 1 -type f -links +1)
+hidden_files=$(find /private/etc -maxdepth 1 -type f -name '.*')
+
+{
+    echo "All files:"
+    echo "---------"
+    echo "$all_files"
+    echo ""
+    echo "Symbolic links:"
+    echo "--------------"
+    echo "$sym_links"
+    echo ""
+    echo "Hard links:"
+    echo "----------"
+    echo "$hard_links"
+    echo ""
+    echo "hidden_files:"
+    echo "------------"
+    echo "$hidden_files"
+} >>~/scripts/tree.txt

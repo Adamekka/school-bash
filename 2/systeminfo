@@ -9,9 +9,23 @@ vars=$(env)
 rm systeminfo.txt
 
 {
-    echo "Date: $date"
-    echo "User: $user"
-    echo "System info: $systeminfo"
-    echo "Path: $path"
-    echo "Env vars: $vars"
+    echo "Date:"
+    echo "----"
+    echo "$date"
+    echo ""
+    echo "User:"
+    echo "----"
+    echo "$user"
+    echo ""
+    echo "System info:"
+    echo "-----------"
+    echo "$systeminfo"
+    echo ""
+    echo "Path:"
+    echo "----"
+    echo "$path"
+    echo ""
+    echo "Environment variables:"
+    echo "---------------------"
+    echo "$vars"
 } >>systeminfo.txt

@@ -3,6 +3,7 @@
 while IFS= read -r line; do
     # Skip empty lines
     if [ -z "$line" ]; then
+        echo "Skipping empty line"
         continue
     fi
 
