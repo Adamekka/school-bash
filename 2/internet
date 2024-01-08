@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Check if online or offline
+if ping -qc 1 1.1.1.1 &>/dev/null; then
+    echo Online
+else
+    echo Offline
+    exit 1
+fi
+
+read -rp "Enter domain name or IP address: " server
+
+{
+    echo "traceroute:"
+    echo "----------"
+    traceroute "$server"
+    echo "whois:"
+    echo "-----"
+    whois "$server"
+    echo "nslookup:"
+    echo "--------"
+    nslookup "$server"
+} >>internet.txt
