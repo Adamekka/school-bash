@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+# Check root
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root user"
+    exit 1
+fi
+
+# Check args
+if [ "$#" -ne 1 ] || { [ "$1" != "create" ] && [ "$1" != "remove" ]; }; then
+    echo "Usage: $0 <create | remove>"
+    exit 1
+fi
+
+echo "User creation $(date)" >log.txt
+
+if ! [[ -f "studenti.xlsx" ]]; then
+    echo "The input file 'studenti.xlsx' doesn't exist"
+    echo "ERROR: The input file 'studenti.xlsx' doesn't exist" >>log.txt
+    exit 1
+fi
+
+# Convert .xlsx to .csv
+./gocsv xlsx --sheet 1 studenti.xlsx | grep -v '^$' >studenti.csv
+
+case $1 in
+create)
+    printf "Creating users\n\n" >>log.txt
+
+    # Create groups
+    echo "Creating groups..."
+    groups=("T1A" "T2A" "T3A" "T4A" "E1A" "E2A" "E3A" "E4A" "E1B" "E2B" "E3B" "E4B" "STUDENTI" "ICT" "ELEKTRO" "MUZI" "ZENY")
+    for group_name in "${groups[@]}"; do
+        if groupadd "$group_name" >/dev/null 2>&1; then
+            echo "Group '$group_name' created"
+        else
+            echo "Group '$group_name' was already created"
+        fi
+    done
+
+    echo "" >>log.txt
+
+    # Create users
+    echo "Creating users..."
+    while IFS=, read -r surname name class grade gender; do
+        username=$(echo "$surname" | tr -d ' ' | iconv -f utf-8 -t ascii//TRANSLIT | tr '[:upper:]' '[:lower:]').$(echo "$name" | tr -d ' ' | iconv -f utf-8 -t ascii//TRANSLIT | tr '[:upper:]' '[:lower:]')
+        password=$(echo "$surname" | tr -d ' ' | iconv -f utf-8 -t ascii//TRANSLIT)Q12020\!
+
+        # Check if already user exists
+        if id "$username" >/dev/null 2>&1; then
+            echo "User '$username' already exists"
+            echo "ERROR: User '$username' already exists" >>log.txt
+            continue
+        fi
+
+        current_year=$(date +%Y)
+        case $grade in
+        "První ročník")
+            expire_date="31-08-$((current_year + 4))"
+            ;;
+        "Druhý ročník")
+            expire_date="31-08-$((current_year + 3))"
+            ;;
+        "Třetí ročník")
+            expire_date="31-08-$((current_year + 2))"
+            ;;
+        "Čtvrtý ročník")
+            expire_date="31-08-$((current_year + 1))"
+            ;;
+        *)
+            display_error "Invalid grade received!, exiting..."
+            exit 1
+            ;;
+        esac
+
+        # Create user
+        echo "Creating user: '$username'"
+        if ! useradd -m -s /bin/bash "$username" -e "$expire_date" >/dev/null 2>&1; then
+            echo "Error while creating user '$username', skipping..."
+            echo "ERROR: Error while creating user '$username', skipping..." >>log.txt
+            continue
+        fi
+
+        # Set password
+        echo "$username:$password" | chpasswd
+
+        # Expire password
+        passwd --expire "$username" >/dev/null 2>&1
+
+        # Add user to STUDENTI group
+        if ! usermod -a -G "STUDENTI" "$username" >/dev/null 2>&1; then
+            echo "Failed to add user '$username' to STUDENTI group"
+            echo "ERROR: Failed to add user '$username' to STUDENTI group" >>log.txt
+        fi
+
+        # Add user to class group
+        if ! usermod -a -G "$class" "$username"; then
+            echo "Failed to add user '$username' to '$class' group"
+            echo "ERROR: Failed to add user '$username' to '$class' group" >>log.txt
+        fi
+
+        # Add user to gender group
+        case $gender in
+        "Muž")
+            if ! usermod -a -G "MUZI" "$username" >/dev/null 2>&1; then
+                echo "Failed to add user '$username' to MUZI group"
+                echo "ERROR: Failed to add user '$username' to MUZI group" >>log.txt
+            fi
+            ;;
+        "Žena")
+            if ! usermod -a -G "ZENY" "$username" >/dev/null 2>&1; then
+                echo "Failed to add user '$username' to ZENY group"
+                echo "ERROR: Failed to add user '$username' to ZENY group" >>log.txt
+            fi
+            ;;
+        esac
+
+        # Add user to ICT or ELEKTRO group
+        case ${class:0:1} in
+        "T")
+            if ! usermod -a -G "ICT" "$username" >/dev/null 2>&1; then
+                echo "Failed to add user '$username' to ICT group"
+                echo "ERROR: Failed to add user '$username' to ICT group" >>log.txt
+            fi
+            ;;
+        "E")
+            if ! usermod -a -G "ELEKTRO" "$username" >/dev/null 2>&1; then
+                echo "Failed to add user '$username' to ELEKTRO group"
+                echo "ERROR: Failed to add user '$username' to ELEKTRO group" >>log.txt
+            fi
+            ;;
+        esac
+
+        # Check if user was created
+        if id "$username" >/dev/null 2>&1; then
+            echo "User '$username' created"
+            echo "User '$username' created" >>log.txt
+        else
+            echo "User '$username' was not created"
+            echo "ERROR: User '$username' was not created" >>log.txt
+        fi
+
+        echo "" >>log.txt
+    done <studenti.csv
+    ;;
+remove)
+    printf "Removing users...\n\n" >>log.txt
+
+    while IFS="," read -r surname name _class _grade _gender; do
+        username=$(echo "$surname" | tr -d ' ' | iconv -f utf-8 -t ascii//TRANSLIT | tr '[:upper:]' '[:lower:]').$(echo "$name" | tr -d ' ' | iconv -f utf-8 -t ascii//TRANSLIT | tr '[:upper:]' '[:lower:]')
+        echo "Removing user '$username'"
+
+        if userdel -r "$username" >/dev/null 2>&1; then
+            echo "User '$username' removed"
+            echo "User '$username' removed" >>log.txt
+        else
+            echo "User '$username' was not removed"
+            echo "ERROR: User '$username' was not removed" >>log.txt
+        fi
+
+        echo "" >>log.txt
+    done <studenti.csv
+    ;;
+esac
